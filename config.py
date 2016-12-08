@@ -4,8 +4,8 @@ import const
 random.seed(0)
 
 # For random or default values on any of these values, set to 'None'
-COMPANY_COUNT = 100
-CANDIDATE_COUNT = 100
+COMPANY_COUNT = 10
+CANDIDATE_COUNT = 10
 
 COMPANY_STRATEGY_ASSIGNMENT = const.Strategy.accept_first
 CANDIDATE_STRATEGY_ASSIGNMENT = const.Strategy.accept_first

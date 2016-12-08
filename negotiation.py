@@ -10,6 +10,8 @@ random.seed(0)
 compensation_data = {}
 companies = []
 candidates = []
+offer_matrix = [[[]]]  # idx1 - company, idx2 - candidate, idx3 - offer number
+offer_history = []
 
 
 def random_strategy():
@@ -53,11 +55,25 @@ def read_data():
         compensation_data[title] = valuation
 
 
+def store_new_offer(company_id, candidate_id, offer):
+    offer_history.append(offer)
+    offer_matrix[company_id][candidate_id].append(offer)
+
+
 def negotiate():
+    global offer_matrix
     read_data()
     generate_companies()
     generate_candidates()
+    offer_matrix = len(companies)*[len(candidates)*[[]]]
 
-    print(companies)
-    print(candidates)
+    total_agents = len(companies) + len(candidates)
+    done_agents = 0
+    while done_agents < total_agents:
+        done_agents = 0
+        for agent in companies + candidates:
+            if agent.done():
+                done_agents += 1
+
+
 

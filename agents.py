@@ -8,18 +8,29 @@ class Agent:
     id = 0
     strategy = const.Strategy.accept_first
 
+    def done(self):
+        return False
+
     def __repr__(self):
         return 'Id: {}, Strategy: {}'.format(self.id, self.strategy)
 
 
 class Company(Agent):
     candidates_to_hire = 0
+    candidates_hired = []
+
+    def done(self):
+        return len(self.candidates_hired) == self.candidates_to_hire
 
 
 class Candidate(Agent):
     job_type = ''
     std_dev = 0.0  # Where candidate places themselves above or below average
     valuation = Negotiable()
+    accepted_with = -1 # id of company accepted with
+
+    def done(self):
+        return self.accepted_with != -1
 
     def decide_valuation(self, avg_valuation):
         self.std_dev = random.normalvariate(0, 1)
