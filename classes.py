@@ -1,5 +1,5 @@
+import const
 
-from enum import Enum
 
 # All values should be in $ amounts for simplicity
 class Negotiable:
@@ -38,10 +38,26 @@ class Offer(Negotiable):
     creator = 0  # id of creator?
 
 
-class Strategy(Enum):
-    accept_first = 1
-    reject_first_accept_second = 2
-    randomly_accept = 3
-    negotiate_until_all_met = 4
-    negotiate_until_only_important_met = 5
-    negotiate_once = 6
+class Company:
+    id = 0
+    candidates_to_hire = 0
+    strategy = 0
+
+    def __repr__(self):
+        return 'Id: {}, To hire: {}, Strategy: {}'.format(self.id, self.candidates_to_hire, self.strategy)
+
+    def __str__(self):
+        return self.__repr__()
+
+
+class Candidate:
+    id = 0
+    job_type = ''
+    strategy = const.Strategy
+    valuation = Negotiable()
+
+    def __repr__(self):
+        return 'Id: {}, Job: {}, Strategy: {}, Valuation: {}'.format(self.id, self.job_type, self.strategy, self.valuation)
+
+    def __str__(self):
+        return self.__repr__()
