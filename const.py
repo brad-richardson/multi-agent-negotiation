@@ -1,6 +1,6 @@
 from enum import Enum
 
-JOB_TYPES = ['Administrative & Mgmt', 'Administrative Secretarial', 'Administrative-DPW/PUC', 'Administrative-Labor & Trades', 'Agriculture & Horticulture', 'Airport Operation', 'Appraisal & Taxation', 'Budget', 'Clerical', 'Community Development', 'Computer Operatns & Repro Svcs', 'Construction Inspection', 'Construction Project Mgmt', 'Correction & Detention', 'Dietary & Food', 'Emergency Services', 'Energy & Environment', 'Fire Services', 'Health & Sanitation Inspection', 'Hospital Administration', 'Housekeeping & Laundry', 'Human Services', 'Information Systems', 'Journeyman Trade', 'Lab', 'Legal & Court', 'Library', 'Management', 'Med Therapy & Auxiliary', 'Medical & Dental', 'Museum & Cultural Affairs', 'Nursing', 'Park & Zoo', 'Payroll', 'Personnel', 'Police Services', 'Port Operation', 'Probation & Parole', 'Professional Engineering', 'Property Administration', 'Protection & Apprehension', 'Pub Relations & Spec Assts', 'Public Health', 'Public Safety Inspection', 'Public Service Aide', 'Purchasing & Storekeeping', 'Recreation', 'Revenue', 'Semi-Skilled & General Labor', 'SF Redevelopment Agency', 'SF Superior Court', 'Skilled Labor', 'Street Transit', 'Sub-Professional Engineering', 'Supervisory-Labor & Trade']
+JOB_TYPES = ['Administrative & Mgmt', 'Administrative Secretarial', 'Administrative-DPW/PUC', 'Administrative-Labor & Trades', 'Agriculture & Horticulture', 'Airport Operation', 'Appraisal & Taxation', 'Budget Admn & Stats Analysis', 'Clerical Secretarial & Steno', 'Community Development', 'Computer Operatns & Repro Svcs', 'Construction Inspection', 'Construction Project Mgmt', 'Correction & Detention', 'Dietary & Food', 'Emergency Services', 'Energy & Environment', 'Fire Services', 'Health & Sanitation Inspection', 'Hospital Administration', 'Housekeeping & Laundry', 'Human Services', 'Information Systems', 'Journeyman Trade', 'Lab Pharmacy & Med Techs', 'Legal & Court', 'Library', 'Management', 'Med Therapy & Auxiliary', 'Medical & Dental', 'Museum & Cultural Affairs', 'Nursing', 'Park & Zoo', 'Payroll Billing & Accounting', 'Personnel', 'Police Services', 'Port Operation', 'Probation & Parole', 'Professional Engineering', 'Property Administration', 'Protection & Apprehension', 'Pub Relations & Spec Assts', 'Public Health', 'Public Safety Inspection', 'Public Service Aide', 'Purchasing & Storekeeping', 'Recreation', 'Revenue', 'SF Redevelopment Agency', 'SF Superior Court', 'Semi-Skilled & General Labor', 'Skilled Labor', 'Street Transit', 'Sub-Professional Engineering', 'Supervisory-Labor & Trade']
 
 
 class Strategy(Enum):
@@ -10,3 +10,12 @@ class Strategy(Enum):
     negotiate_until_all_met = 4
     negotiate_until_only_important_met = 5
     negotiate_once = 6
+
+
+class Action(Enum):
+    propose = 1
+    argue = 2
+    nothing = 3
+    reject = 4
+    withdraw = 5
+    accept = 6

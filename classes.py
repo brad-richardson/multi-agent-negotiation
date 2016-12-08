@@ -1,4 +1,7 @@
-import const
+
+import random
+
+random.seed(0)
 
 
 # All values should be in $ amounts for simplicity
@@ -13,7 +16,8 @@ class Negotiable:
 
     # Get all variables as a list for comparison
     def vars_list(self):
-        return [self.salary, self.retirement, self.benefits, self.pto, self.stock_options, self.signing_bonus, self.other]
+        return [self.salary, self.retirement, self.benefits, self.pto, self.stock_options, self.signing_bonus,
+                self.other]
 
     def total(self):
         return round(sum(self.vars_list()), 2)
@@ -36,28 +40,3 @@ class Negotiable:
 class Offer(Negotiable):
     is_counter = False
     creator = 0  # id of creator?
-
-
-class Company:
-    id = 0
-    candidates_to_hire = 0
-    strategy = 0
-
-    def __repr__(self):
-        return 'Id: {}, To hire: {}, Strategy: {}'.format(self.id, self.candidates_to_hire, self.strategy)
-
-    def __str__(self):
-        return self.__repr__()
-
-
-class Candidate:
-    id = 0
-    job_type = ''
-    strategy = const.Strategy
-    valuation = Negotiable()
-
-    def __repr__(self):
-        return 'Id: {}, Job: {}, Strategy: {}, Valuation: {}'.format(self.id, self.job_type, self.strategy, self.valuation)
-
-    def __str__(self):
-        return self.__repr__()

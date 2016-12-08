@@ -2,7 +2,8 @@
 import random
 import config
 import const
-from classes import Negotiable, Company, Candidate
+from agents import Candidate, Company
+from classes import Negotiable
 
 random.seed(0)
 
@@ -16,40 +17,21 @@ def random_strategy():
 
 
 def generate_companies():
-    count = config.COMPANY_COUNT
-    if count is None:
-        count = random.randint(1,100)
-    for i in range(count):
+    for i in range(config.COMPANY_COUNT):
         company = Company()
         company.id = i
-        if config.COMPANY_STRATEGY_ASSIGNMENT is None:
-            company.strategy = random_strategy()
-        else:
-            company.strategy = config.COMPANY_STRATEGY_ASSIGNMENT
-        if config.CANDIDATE_COUNT is None:
-            company.candidates_to_hire = random.randint(1, 20)
-        else:
-            company.candidates_to_hire = random.randint(1, config.CANDIDATE_COUNT)
+        company.strategy = config.COMPANY_STRATEGY_ASSIGNMENT
+        company.candidates_to_hire = random.randint(1, config.CANDIDATE_COUNT/2)
         companies.append(company)
 
 
-def candidate_valuation(job_type):
-    return Negotiable()
-
-
 def generate_candidates():
-    count = config.CANDIDATE_COUNT
-    if count is None:
-        count = random.randint(1, 100)
-    for i in range(count):
+    for i in range(config.CANDIDATE_COUNT):
         candidate = Candidate()
         candidate.id = i
-        if config.CANDIDATE_STRATEGY_ASSIGNMENT is None:
-            candidate.strategy = random_strategy()
-        else:
-            candidate.strategy = config.CANDIDATE_STRATEGY_ASSIGNMENT
+        candidate.strategy = config.CANDIDATE_STRATEGY_ASSIGNMENT
         candidate.job_type = random.choice(const.JOB_TYPES)
-        candidate.valuation = candidate_valuation(candidate.job_type)
+        candidate.decide_valuation(compensation_data[candidate.job_type])
         candidates.append(candidate)
 
 
