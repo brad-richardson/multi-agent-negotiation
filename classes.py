@@ -1,5 +1,5 @@
-
 import random
+import const
 
 random.seed(0)
 
@@ -40,3 +40,11 @@ class Negotiable:
 class Offer(Negotiable):
     is_counter = False
     creator = 0  # id of creator?
+
+
+class Decision:
+    offer = Offer
+    action = const.Action
+    origin_is_candidate = True
+    origin = 0
+    target = 0

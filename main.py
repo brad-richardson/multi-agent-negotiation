@@ -2,11 +2,11 @@
 # Multi-Agent
 # Final project: Job offer negotiation
 
-from negotiation import negotiate
+import negotiation
 
 
 def main():
-    negotiate()
+    negotiation.start()
 
 
 if __name__ == '__main__':
