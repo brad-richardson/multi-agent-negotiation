@@ -43,7 +43,7 @@ class Negotiable:
 
     def __repr__(self):
         return '<Offer value: ${:.2f}>'.format(self.total())
-        #return 'Salary: {:.2f}, Pto: {:.2f}, Retirement: {:.2f}, Benefits: {:.2f}, Stock: {:.2f}, Signing: {:.2f}, ' \
+        # return 'Salary: {:.2f}, Pto: {:.2f}, Retirement: {:.2f}, Benefits: {:.2f}, Stock: {:.2f}, Signing: {:.2f}, ' \
         #       'Other: {:.2f}'.format(self.salary, self.pto, self.retirement, self.benefits, self.stock_options,
         #                              self.signing_bonus, self.other)
 

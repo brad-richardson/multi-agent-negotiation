@@ -12,7 +12,6 @@ class Agent:
     def __init__(self):
         self.id = 0
         self.strategy = Strategy
-        self.pending_accept_reply = False  # sent out accept reply, awaiting responseself.
         self.inbox = []
         self.accepted_offers = []
         self.previous_rejected = []  # used for reject first accept second strategy, ids of rejected
@@ -32,11 +31,11 @@ class Agent:
         std_dev_divisor = config.CANDIDATE_VALUATION_STD_DEV_DIVISOR
         if std_dev_divisor is None:
             std_dev_divisor = 5
-        valuation = avg_valuation
-        valuation.salary += std_dev*avg_valuation.salary/std_dev_divisor
-        valuation.retirement += std_dev*avg_valuation.retirement/std_dev_divisor
-        valuation.benefits += std_dev*avg_valuation.benefits/std_dev_divisor
-        valuation.other += std_dev*avg_valuation.other/std_dev_divisor
+        valuation = Negotiable()
+        valuation.salary = avg_valuation.salary + std_dev*avg_valuation.salary/std_dev_divisor
+        valuation.retirement += avg_valuation.retirement + std_dev*avg_valuation.retirement/std_dev_divisor
+        valuation.benefits += avg_valuation.benefits + std_dev*avg_valuation.benefits/std_dev_divisor
+        valuation.other += avg_valuation.other + std_dev*avg_valuation.other/std_dev_divisor
         return valuation
 
     @staticmethod
@@ -73,34 +72,48 @@ class Company(Agent):
     # if <= valuation of candidate, satisfied with offer
     def is_satisfied(self, offer):
         valuation_total = self.candidate_valuations[offer.candidate][1].total()
-        radius = config.ACCEPTANCE_RADIUS_PCT*valuation_total
-        return (offer.total() - valuation_total) <= radius
+        # radius = config.ACCEPTANCE_RADIUS_PCT*valuation_total
+        return offer.total() < valuation_total  # (offer.total() - valuation_total) <= radius
 
-    # Called after found a job
+    # Called after finished to determine success of company
     def happiness(self):
         happiness = 0.0
         for offer in self.accepted_offers:
             valuation = self.candidate_valuations[offer.candidate][1]
-            happiness += valuation.total() - offer.total()
-        return happiness
+            happiness += (valuation.total() * 2) - offer.total()
+        lacking = self.candidates_to_hire - len(self.accepted_offers)
+        if lacking > 0:
+            happiness -= lacking*config.COMPANY_LOST_HAPPINESS_MISSING_EMPLOYEES
+        count = len(self.accepted_offers)
+        if count == 0:
+            count = 1
+        return happiness/count
 
     def act(self, companies, candidates, compensation_data, time):
-        if self.done():
-            return None
         my_offers = []
         pending = 0
 
-        for offer in sorted(self.inbox):
-            # Reached limit, reject offers
-            if len(self.candidates_hired) + pending >= self.candidates_to_hire:
-                my_offers.append(offer.change_action(Action.reject))
-                break
+        # remove old offers
+        to_remove = []
+        for key, offer in self.pending_offers.items():
+            expire_time = offer[1]
+            if expire_time >= time:
+                to_remove.append(key)
+        for key in to_remove:
+            del self.pending_offers[key]
 
+        for offer in sorted(self.inbox):
             # Acknowledge acceptance
             if offer.action == Action.accept:
+                offer.company_accepted_at = offer.total()
                 self.candidates_hired.append(offer.candidate)
                 self.accepted_offers.append(offer)
                 continue
+
+            # Reached limit, reject offers
+            if len(self.candidates_hired) + pending >= self.candidates_to_hire:
+                # my_offers.append(offer.change_action(Action.reject))
+                break
 
             # Handle incoming offers
             if offer.action == Action.propose:
@@ -156,15 +169,13 @@ class Company(Agent):
 
         for my_offer in my_offers:
             my_offer.sender_is_company = True
-            self.pending_offers[my_offer.candidate] = my_offer
-            if my_offer.action == Action.accept:
-                self.candidates_hired.append(my_offer.candidate)
-                self.accepted_offers.append(my_offer)
+            expire_time = time + config.offer_expire_time()
+            self.pending_offers[my_offer.candidate] = (my_offer, expire_time)
         return my_offers
 
     def decide_valuations(self, compensation_data, candidates):
         for candidate in candidates:
-            std_dev = random.normalvariate(0, 1)
+            std_dev = random.normalvariate(0, 0.5)
             valuation = Agent.valuation(compensation_data[candidate.job_type], std_dev)
             self.candidate_valuations.append((std_dev, valuation))
         return
@@ -184,12 +195,16 @@ class Candidate(Agent):
 
     # if >= valuation of candidate, satisfied with offer
     def is_satisfied(self, offer):
-        radius = config.ACCEPTANCE_RADIUS_PCT*self.valuation.total()
-        return (self.valuation.total() - offer.total()) <= radius
+        # radius = config.ACCEPTANCE_RADIUS_PCT*self.valuation.total()
+        return offer.total() > self.valuation.total()  # (self.valuation.total() - offer.total()) <= radius
 
     # Called after found a job
     def happiness(self):
-        return self.valuation.total() - self.accepted_offers[0].total()
+        if len(self.accepted_offers) > 0:
+            accepted_offer_value = self.accepted_offers[0].total()
+        else:
+            accepted_offer_value = 0
+        return accepted_offer_value - self.valuation.total()
 
     def act(self, companies, candidates, compensation_data, time):
         if self.done():
@@ -238,11 +253,12 @@ class Candidate(Agent):
         for my_offer in my_offers:
             my_offer.sender_is_company = False
             if my_offer.action == Action.accept:
+                my_offer.candidate_accepted_at = my_offer.total()
                 self.accepted_offers.append(my_offer)
         return my_offers
 
     def decide_valuation(self, avg_valuation):
-        self.std_dev = random.normalvariate(0, 1)
+        self.std_dev = random.normalvariate(0, 0.5)
         self.avg_valuation = avg_valuation
         self.valuation = Agent.valuation(avg_valuation, self.std_dev)
         return
