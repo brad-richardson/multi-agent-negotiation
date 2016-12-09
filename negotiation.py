@@ -72,6 +72,13 @@ def read_data():
         compensation_data[title] = valuation
 
 
+def output_results():
+    for company in companies:
+        print(company.happiness())
+    for candidate in candidates:
+        print(candidate.happiness())
+
+
 def start():
     read_data()
     generate_candidates()
@@ -80,7 +87,9 @@ def start():
     total_agents = len(companies) + len(candidates)
     done_agents = 0
     curr_time = 0
-    max_time = 100
+    max_time = 1000
+    print("Running negotiations with {} companies and {} candidates (max steps: {}):"
+          .format(config.COMPANY_COUNT, config.CANDIDATE_COUNT, max_time))
     while done_agents < total_agents and curr_time < max_time:
         curr_offers = []
         done_agents = 0
@@ -90,7 +99,7 @@ def start():
                 continue
             offers = agent.act(companies, candidates, compensation_data, curr_time)
             curr_offers.extend(offers)
-        for offer in offers:
+        for offer in curr_offers:
             if offer.action == Action.nothing:
                 continue
             else:
@@ -101,6 +110,8 @@ def start():
                 offer_history.append(offer)
 
         curr_time += 1
+        if curr_time % 10 == 0:
+            print("At step: {}".format(curr_time))
+    print("Finished after {} steps".format(curr_time))
 
-    print(companies)
-    print(candidates)
+    output_results()

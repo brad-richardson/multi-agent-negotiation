@@ -33,6 +33,7 @@ class Negotiable:
         self.stock_options *= 1+pct
         self.signing_bonus *= 1+pct
         self.other *= 1+pct
+        return self
 
     def __eq__(self, other):
         return self.vars_list() == other.vars_list()
@@ -60,7 +61,14 @@ class Offer(Negotiable):
         self.action = const.Action
         self.expires_at = -1
 
-    def change_action(self, new_action):
-        my_offer = copy.deepcopy(self)
+    @staticmethod
+    def change_action(offer, new_action):
+        my_offer = Offer()
         my_offer.action = new_action
+        my_offer.candidate = offer.candidate
+        my_offer.company = offer.company
+        my_offer.salary = offer.salary
+        my_offer.retirement = offer.retirement
+        my_offer.benefits = offer.benefits
+        my_offer.other = offer.other
         return my_offer

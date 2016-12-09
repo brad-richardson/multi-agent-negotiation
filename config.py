@@ -1,11 +1,14 @@
+import random
 import const
 
-COMPANY_COUNT = 1
-CANDIDATE_COUNT = 1
+random.seed(0)
+
+COMPANY_COUNT = 1000
+CANDIDATE_COUNT = 1000
 
 # Strategies to choose from (distributed uniformly, in order)
-COMPANY_STRATEGY_ASSIGNMENT = [const.Strategy.accept_first]  # list(const.Strategy)
-CANDIDATE_STRATEGY_ASSIGNMENT = [const.Strategy.negotiate_once]  # list(const.Strategy)
+COMPANY_STRATEGY_ASSIGNMENT = list(const.Strategy)
+CANDIDATE_STRATEGY_ASSIGNMENT = list(const.Strategy)
 
 # Used for determining value of offers and for deciding personal valuation
 # Ex: Avg $ = 100,000, CANDIDATE_VALUATION_STD_DEV_DIVISOR = 5
@@ -16,11 +19,10 @@ CANDIDATE_VALUATION_STD_DEV_DIVISOR = 5
 COMPANY_RANDOM_STRATEGY_THRESHOLD = 90
 CANDIDATE_RANDOM_STRATEGY_THRESHOLD = 90
 
-# When <= this many incoming, send new offers
-COMPANY_PROPOSE_THRESHOLD = 0
-
-# How far up or down to negotiate
-NEGOTIATION_PCT = .05
-
 # How high above/below willing to accept
-ACCEPTANCE_RADIUS_PCT = .05
+ACCEPTANCE_RADIUS_PCT = .1
+
+
+# How far up or down to increase/decrease on negotiation
+def negotiation_pct():
+    return random.uniform(.01, .1)
