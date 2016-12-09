@@ -11,7 +11,7 @@ random.seed(0)
 compensation_data = {}
 companies = []
 candidates = []
-decision_history = []
+offer_history = []
 
 strat_index = 0
 
@@ -82,26 +82,19 @@ def start():
     max_time = 100
     while done_agents < total_agents and curr_time < max_time:
         done_agents = 0
-        curr_offers = []
         for agent in companies + candidates:
             if agent.done():
                 done_agents += 1
                 continue
-            offer = agent.decide(companies, candidates)
-            # candidate_idx = random.randint(0, len(candidates) - 1)
-            # candidates[candidate_idx].give(Offer())
+            offer = agent.decide(companies, candidates, compensation_data)
             if offer.action == Action.nothing:
                 continue
             else:
-                curr_offers.append(offer)
-
-        for offer in curr_offers:
-            if offer.sender_is_company:
-                candidate = candidates[offer.candidate]
-                candidate.give(offer)
-            # else:
-            #     companies[offer.company].give(offer)
-            decision_history.append(offer)
+                if offer.sender_is_company:
+                    candidates[offer.candidate].give(offer)
+                else:
+                    companies[offer.company].give(offer)
+                offer_history.append(offer)
         curr_time += 1
 
     print(companies)

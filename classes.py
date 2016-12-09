@@ -6,13 +6,15 @@ random.seed(0)
 
 # All values should be in $ amounts for simplicity
 class Negotiable:
-    salary = 0.0
-    retirement = 0.0
-    benefits = 0.0
-    pto = 0.0
-    stock_options = 0.0
-    signing_bonus = 0.0
-    other = 0.0
+
+    def __init__(self):
+        self.salary = 0.0
+        self.retirement = 0.0
+        self.benefits = 0.0
+        self.pto = 0.0
+        self.stock_options = 0.0
+        self.signing_bonus = 0.0
+        self.other = 0.0
 
     # Get all variables as a list for comparison
     def vars_list(self):
@@ -39,7 +41,10 @@ class Negotiable:
 
 
 class Offer(Negotiable):
-    sender_is_company = True
-    candidate = 0
-    company = 0
-    action = const.Action
+
+    def __init__(self):
+        super(Offer, self).__init__()
+        self.sender_is_company = True
+        self.candidate = 0
+        self.company = 0
+        self.action = const.Action

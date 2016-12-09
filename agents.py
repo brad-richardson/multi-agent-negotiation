@@ -7,16 +7,18 @@ random.seed(0)
 
 
 class Agent:
-    id = 0
-    strategy = Strategy
-    inbox = []
-    pending_accept_reply = False  # sent out accept reply, awaiting response
-    previous_rejected = []  # used for reject first accept second strategy, ids of rejected
+
+    def __init__(self):
+        self.id = 0
+        self.strategy = Strategy
+        self.pending_accept_reply = False  # sent out accept reply, awaiting responseself.
+        self.inbox = []
+        self.previous_rejected = []  # used for reject first accept second strategy, ids of rejected
 
     def done(self):
         return False
 
-    def decide(self, companies, candidates):
+    def decide(self, companies, candidates, compensation_data):
         return Offer()
 
     def give(self, decision):
@@ -28,13 +30,16 @@ class Agent:
 
 
 class Company(Agent):
-    candidates_to_hire = 0
-    candidates_hired = []
+
+    def __init__(self):
+        super(Company, self).__init__()
+        self.candidates_to_hire = 0
+        self.candidates_hired = []
 
     def done(self):
         return len(self.candidates_hired) == self.candidates_to_hire
 
-    def decide(self, companies, candidates):
+    def decide(self, companies, candidates, compensation_data):
         sorted_offers = sorted(self.inbox)
         print(sorted_offers)
 
@@ -64,31 +69,22 @@ class Company(Agent):
 
 
 class Candidate(Agent):
-    job_type = ''
-    std_dev = 0.0  # Where candidate places themselves above or below average
-    valuation = Negotiable
-    accepted_with = -1  # id of company accepted with
+
+    def __init__(self):
+        super(Candidate, self).__init__()
+        self.job_type = ''
+        self.std_dev = 0.0  # Where candidate places themselves above or below average
+        self.valuation = Negotiable
+        self.accepted_with = -1  # id of company accepted with
 
     def done(self):
         return self.accepted_with != -1
 
-    def decide(self, companies, candidates):
+    def decide(self, companies, candidates, compensation_data):
         offer = Offer()
         offer.sender_is_company = False
         offer.action = Action.nothing
         return offer
-        # # Do these action inside agents?
-        # if action == Action.propose:
-        #     print("propose")
-        # elif action == Action.nothing:
-        #     print("nothing")
-        # elif action == Action.reject:
-        #     print("reject")
-        # elif action == Action.accept:
-        #     print("accept")
-        # # Need to send data along
-        # if action != action.nothing:
-        #     print("do stuff")
 
     def decide_valuation(self, avg_valuation):
         self.std_dev = random.normalvariate(0, 1)
