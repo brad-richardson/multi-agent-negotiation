@@ -14,6 +14,7 @@ class Agent:
         self.strategy = Strategy
         self.pending_accept_reply = False  # sent out accept reply, awaiting responseself.
         self.inbox = []
+        self.previous_rejected = []  # used for reject first accept second strategy, ids of rejected
 
     def done(self):
         return False
@@ -52,29 +53,67 @@ class Company(Agent):
     def done(self):
         return len(self.candidates_hired) == self.candidates_to_hire
 
+    def has_rejected(self, candidate_idx):
+        return candidate_idx in self.previous_rejected
+
+    # if <= valuation of candidate, satisfied with offer
+    def is_satisfied(self, offer):
+        return offer.total() <= self.candidate_valuations[offer.candidate][1].total()
+
+    def negotiate(self, offer):
+        return offer.increase_by_pct(-1*config.COMPANY_NEGOTIATION_PCT)
+
     def act(self, companies, candidates, compensation_data, time):
         if self.done():
             return None
         my_offers = []
+        pending = 0
+
+        for offer in sorted(self.inbox):
+            # Reached limit, reject offers
+            if len(self.candidates_hired) + pending >= self.candidates_to_hire:
+                my_offers.append(offer.change_action(Action.reject))
+                break
+
+            # Acknowledge acceptance
+            if offer.action == Action.accept:
+                self.candidates_hired.append(offer.candidate)
+                continue
+
+            # Handle incoming offers
+            if offer.action == Action.propose:
+                if self.strategy == Strategy.accept_first:
+                    my_offers.append(offer.change_action(Action.accept))
+                elif self.strategy == Strategy.reject_first_accept_second:
+                    if self.has_rejected(offer.candidate):
+                        my_offers.append(offer.change_action(Action.accept))
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
+                elif self.strategy == Strategy.randomly_accept:
+                    die = random.randint(1, 100)
+                    if die >= config.COMPANY_RANDOM_STRATEGY_THRESHOLD:
+                        my_offers.append(offer.change_action(Action.accept))
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
+                elif self.strategy == Strategy.negotiate_until_satisfied:
+                    if self.is_satisfied(offer):
+                        my_offers.append(offer.change_action(Action.accept))
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
+                elif self.strategy == Strategy.negotiate_once:
+                    if self.has_rejected(offer.candidate):
+                        my_offers.append(offer.change_action(Action.accept))
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
+            pending += 1
+
+        for my_offer in my_offers:
+            my_offer.sender_is_company = True
+            if my_offer.action == Action.accept:
+                self.candidates_hired.append(my_offer.candidate)
+            elif my_offer.action == Action.reject:
+                self.previous_rejected.append(my_offer.candidate)
         return my_offers
-        # Process:
-        # 1. Look at pending offers
-        # 2. Sort to find best offers
-        # 3. Determine what to do based on strategy and pending offers
-
-
-
-        # # Do these action inside agents?
-        # if action == Action.propose:
-        #     print("propose")
-        # elif action == Action.nothing:
-        #     print("nothing")
-        # elif action == Action.reject:
-        #     print("reject")
-        # elif action == Action.accept:
-        #     print("accept")
-        # # Need to send data along
-        # if action != action.nothing:
 
     def decide_valuations(self, compensation_data, candidates):
         for candidate in candidates:
@@ -93,7 +132,6 @@ class Candidate(Agent):
         self.valuation = Negotiable()
         self.avg_valuation = Negotiable()
         self.accepted_with = -1  # id of company accepted with
-        self.previous_rejected = []  # used for reject first accept second strategy, ids of rejected
 
     def done(self):
         return self.accepted_with != -1
@@ -101,11 +139,11 @@ class Candidate(Agent):
     def has_rejected(self, company_idx):
         return company_idx in self.previous_rejected
 
-    def is_satisified(self, offer):
+    def is_satisfied(self, offer):
         return offer.total() >= self.valuation.total()
 
-    def negotiate(self, offer):
-        return offer.increase_by_pct(config.CANDIDATE_NEGOTIATION_PCT)
+    def negotiate(self, offer, sign=1):
+        return offer.increase_by_pct(sign*config.CANDIDATE_NEGOTIATION_PCT)
 
     def act(self, companies, candidates, compensation_data, time):
         if self.done():
@@ -113,41 +151,47 @@ class Candidate(Agent):
         my_offers = []
 
         for offer in sorted(self.inbox, reverse=True):
-            if self.strategy == Strategy.accept_first:
-                my_offers.append(offer.change_action(Action.accept))
+            if offer.action == Action.accept:
+                my_offers.clear()
+                self.accepted_with = offer.company
                 break
-            elif self.strategy == Strategy.reject_first_accept_second:
-                if self.has_rejected(offer.company):
+
+            if offer.action == Action.propose:
+                if self.strategy == Strategy.accept_first:
                     my_offers.append(offer.change_action(Action.accept))
                     break
-                else:
-                    my_offers.append(offer.change_action(Action.reject))
-                    self.previous_rejected.append(my_offer.company)
-            elif self.strategy == Strategy.randomly_accept:
-                die = random.randint(1, 100)
-                if die >= config.CANDIDATE_RANDOM_STRATEGY_THRESHOLD:
-                    my_offers.append(offer.change_action(Action.accept))
-                    break
-                else:
-                    my_offers.append(offer.change_action(Action.reject))
-            elif self.strategy == Strategy.negotiate_until_satisfied:
-                if self.is_satisified(offer):
-                    my_offers.append(offer.change_action(Action.accept))
-                    break
-                else:
-                    my_offers.append(self.negotiate(offer.change_action(Action.propose)))
-            elif self.strategy == Strategy.negotiate_once:
-                if self.has_rejected(offer.company):
-                    my_offers.append(offer.change_action(Action.accept))
-                    break
-                else:
-                    my_offers.append(self.negotiate(offer.change_action(Action.propose)))
-                    self.previous_rejected.append(offer.company)
+                elif self.strategy == Strategy.reject_first_accept_second:
+                    if self.has_rejected(offer.company):
+                        my_offers.append(offer.change_action(Action.accept))
+                        break
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.reject)))
+                elif self.strategy == Strategy.randomly_accept:
+                    die = random.randint(1, 100)
+                    if die >= config.CANDIDATE_RANDOM_STRATEGY_THRESHOLD:
+                        my_offers.append(offer.change_action(Action.accept))
+                        break
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
+                elif self.strategy == Strategy.negotiate_until_satisfied:
+                    if self.is_satisfied(offer):
+                        my_offers.append(offer.change_action(Action.accept))
+                        break
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
+                elif self.strategy == Strategy.negotiate_once:
+                    if self.has_rejected(offer.company):
+                        my_offers.append(offer.change_action(Action.accept))
+                        break
+                    else:
+                        my_offers.append(self.negotiate(offer.change_action(Action.propose)))
 
         for my_offer in my_offers:
             my_offer.sender_is_company = False
             if my_offer.action == Action.accept:
                 self.accepted_with = my_offer.company
+            elif my_offer.action == Action.reject:
+                self.previous_rejected.append(my_offer.company)
         return my_offers
 
     def decide_valuation(self, avg_valuation):

@@ -60,8 +60,7 @@ class Offer(Negotiable):
         self.action = const.Action
         self.expires_at = -1
 
-    @staticmethod
-    def change_action(offer, new_action):
-        my_offer = copy.deepcopy(offer)
+    def change_action(self, new_action):
+        my_offer = copy.deepcopy(self)
         my_offer.action = new_action
         return my_offer

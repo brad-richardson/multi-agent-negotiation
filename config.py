@@ -16,9 +16,8 @@ CANDIDATE_VALUATION_STD_DEV_DIVISOR = 5
 COMPANY_RANDOM_STRATEGY_THRESHOLD = 90
 CANDIDATE_RANDOM_STRATEGY_THRESHOLD = 90
 
-# When <= this many incoming, send new offer
+# When <= this many incoming, send new offers
 COMPANY_PROPOSE_THRESHOLD = 0
-CANDIDATE_PROPOSE_THRESHOLD = 0
 
 # How far up or down to negotiate
 COMPANY_NEGOTIATION_PCT = .05

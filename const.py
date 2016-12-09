@@ -14,5 +14,4 @@ class Strategy(Enum):
 class Action(Enum):
     propose = 1
     nothing = 2
-    reject = 3
     accept = 4
