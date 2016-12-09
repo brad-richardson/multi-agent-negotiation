@@ -1,4 +1,5 @@
 import random
+import copy
 import const
 
 random.seed(0)
@@ -24,6 +25,15 @@ class Negotiable:
     def total(self):
         return round(sum(self.vars_list()), 2)
 
+    def increase_by_pct(self, pct):
+        self.salary *= 1+pct
+        self.retirement *= 1+pct
+        self.benefits *= 1+pct
+        self.pto *= 1+pct
+        self.stock_options *= 1+pct
+        self.signing_bonus *= 1+pct
+        self.other *= 1+pct
+
     def __eq__(self, other):
         return self.vars_list() == other.vars_list()
 
@@ -48,3 +58,10 @@ class Offer(Negotiable):
         self.candidate = 0
         self.company = 0
         self.action = const.Action
+        self.expires_at = -1
+
+    @staticmethod
+    def change_action(offer, new_action):
+        my_offer = copy.deepcopy(offer)
+        my_offer.action = new_action
+        return my_offer

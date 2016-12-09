@@ -30,17 +30,6 @@ def next_strategy(is_company):
     return strategy
 
 
-def generate_companies():
-    global strat_index
-    strat_index = 0
-    for i in range(config.COMPANY_COUNT):
-        company = Company()
-        company.id = i
-        company.strategy = next_strategy(is_company=True)
-        company.candidates_to_hire = random.randint(1, math.ceil(config.CANDIDATE_COUNT/2))
-        companies.append(company)
-
-
 def generate_candidates():
     global strat_index
     strat_index = 0
@@ -51,6 +40,19 @@ def generate_candidates():
         candidate.job_type = random.choice(JOB_TYPES)
         candidate.decide_valuation(compensation_data[candidate.job_type])
         candidates.append(candidate)
+
+
+# Must be called after generate_candidates
+def generate_companies():
+    global strat_index
+    strat_index = 0
+    for i in range(config.COMPANY_COUNT):
+        company = Company()
+        company.id = i
+        company.strategy = next_strategy(is_company=True)
+        company.candidates_to_hire = random.randint(1, math.ceil(len(candidates)/2))
+        company.decide_valuation(compensation_data, candidates)
+        companies.append(company)
 
 
 def read_data():
@@ -73,20 +75,23 @@ def read_data():
 
 def start():
     read_data()
-    generate_companies()
     generate_candidates()
+    generate_companies()
 
     total_agents = len(companies) + len(candidates)
     done_agents = 0
     curr_time = 0
     max_time = 100
     while done_agents < total_agents and curr_time < max_time:
+        curr_offers = []
         done_agents = 0
         for agent in companies + candidates:
             if agent.done():
                 done_agents += 1
                 continue
-            offer = agent.decide(companies, candidates, compensation_data)
+            offers = agent.act(companies, candidates, compensation_data, curr_time)
+            curr_offers.extend(offers)
+        for offer in offers:
             if offer.action == Action.nothing:
                 continue
             else:
@@ -95,6 +100,7 @@ def start():
                 else:
                     companies[offer.company].give(offer)
                 offer_history.append(offer)
+
         curr_time += 1
 
     print(companies)

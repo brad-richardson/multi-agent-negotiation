@@ -7,9 +7,8 @@ class Strategy(Enum):
     accept_first = 1
     reject_first_accept_second = 2
     randomly_accept = 3
-    negotiate_until_all_met = 4
-    negotiate_until_only_important_met = 5
-    negotiate_once = 6
+    negotiate_until_satisfied = 4
+    negotiate_once = 5
 
 
 class Action(Enum):
