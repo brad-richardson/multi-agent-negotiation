@@ -1,4 +1,3 @@
-
 import random
 import math
 import config
@@ -51,7 +50,7 @@ def generate_companies():
         company.id = i
         company.strategy = next_strategy(is_company=True)
         company.candidates_to_hire = random.randint(1, math.ceil(len(candidates)/2))
-        company.decide_valuation(compensation_data, candidates)
+        company.decide_valuations(compensation_data, candidates)
         companies.append(company)
 
 
