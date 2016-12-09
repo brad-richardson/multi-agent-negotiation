@@ -1,7 +1,8 @@
 
 import random
+import math
 import config
-from const import JOB_TYPES
+from const import JOB_TYPES, Action
 from agents import Candidate, Company
 from classes import Negotiable
 
@@ -17,7 +18,6 @@ strat_index = 0
 
 def next_strategy(is_company):
     global strat_index
-    strategy = None
     if is_company:
         if strat_index >= len(config.COMPANY_STRATEGY_ASSIGNMENT):
             strat_index = 0
@@ -37,7 +37,7 @@ def generate_companies():
         company = Company()
         company.id = i
         company.strategy = next_strategy(is_company=True)
-        company.candidates_to_hire = random.randint(1, config.CANDIDATE_COUNT/2)
+        company.candidates_to_hire = random.randint(1, math.ceil(config.CANDIDATE_COUNT/2))
         companies.append(company)
 
 
@@ -72,23 +72,37 @@ def read_data():
 
 
 def start():
-    global offer_matrix
     read_data()
     generate_companies()
     generate_candidates()
-    offer_matrix = len(companies)*[len(candidates)*[[]]]
 
     total_agents = len(companies) + len(candidates)
     done_agents = 0
     curr_time = 0
-    max_time = 1000
+    max_time = 100
     while done_agents < total_agents and curr_time < max_time:
         done_agents = 0
+        curr_offers = []
         for agent in companies + candidates:
             if agent.done():
                 done_agents += 1
                 continue
-            decision = agent.decide(companies, candidates)
-            decision_history.append(decision)
+            offer = agent.decide(companies, candidates)
+            # candidate_idx = random.randint(0, len(candidates) - 1)
+            # candidates[candidate_idx].give(Offer())
+            if offer.action == Action.nothing:
+                continue
+            else:
+                curr_offers.append(offer)
+
+        for offer in curr_offers:
+            if offer.sender_is_company:
+                candidate = candidates[offer.candidate]
+                candidate.give(offer)
+            # else:
+            #     companies[offer.company].give(offer)
+            decision_history.append(offer)
         curr_time += 1
 
+    print(companies)
+    print(candidates)

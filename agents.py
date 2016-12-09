@@ -1,13 +1,15 @@
 import random
-import const
+from const import Action, Strategy
 import config
-from classes import Negotiable, Offer, Decision
+from classes import Negotiable, Offer
+
+random.seed(0)
 
 
 class Agent:
     id = 0
-    strategy = const.Strategy
-    incoming_offers = [Offer]
+    strategy = Strategy
+    inbox = []
     pending_accept_reply = False  # sent out accept reply, awaiting response
     previous_rejected = []  # used for reject first accept second strategy, ids of rejected
 
@@ -15,10 +17,14 @@ class Agent:
         return False
 
     def decide(self, companies, candidates):
-        return Decision()
+        return Offer()
+
+    def give(self, decision):
+        self.inbox.append(decision)
 
     def __repr__(self):
-        return 'Id: {}, Strategy: {}'.format(self.id, self.strategy)
+        return '<{} #{}, {}, offers: {}, done? {}>'.format(type(self).__name__, self.id, self.strategy, len(self.inbox),
+                                                           self.done())
 
 
 class Company(Agent):
@@ -29,8 +35,13 @@ class Company(Agent):
         return len(self.candidates_hired) == self.candidates_to_hire
 
     def decide(self, companies, candidates):
-        print('decide')
-        return Decision()
+        sorted_offers = sorted(self.inbox)
+        print(sorted_offers)
+
+        offer = Offer()
+        offer.sender_is_company = True
+
+        return offer
         # Process:
         # 1. Look at pending offers
         # 2. Sort to find best offers
@@ -62,8 +73,10 @@ class Candidate(Agent):
         return self.accepted_with != -1
 
     def decide(self, companies, candidates):
-        print('decide')
-        return Decision()
+        offer = Offer()
+        offer.sender_is_company = False
+        offer.action = Action.nothing
+        return offer
         # # Do these action inside agents?
         # if action == Action.propose:
         #     print("propose")

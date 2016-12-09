@@ -4,12 +4,12 @@ import const
 random.seed(0)
 
 # For random values on these values, set to 'None'
-COMPANY_COUNT = 10
-CANDIDATE_COUNT = 10
+COMPANY_COUNT = 1
+CANDIDATE_COUNT = 1
 
 # Strategies to choose from (distributed uniformly, in order)
-COMPANY_STRATEGY_ASSIGNMENT = list(const.Strategy)
-CANDIDATE_STRATEGY_ASSIGNMENT = list(const.Strategy)
+COMPANY_STRATEGY_ASSIGNMENT = [const.Strategy.accept_first] # list(const.Strategy)
+CANDIDATE_STRATEGY_ASSIGNMENT = [const.Strategy.negotiate_once] # list(const.Strategy)
 
 # Used for determining value of offers and for deciding personal valuation
 # Ex: Avg $ = 100,000, CANDIDATE_VALUATION_STD_DEV_DIVISOR = 5
