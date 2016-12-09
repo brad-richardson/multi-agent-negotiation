@@ -3,8 +3,8 @@ import const
 
 random.seed(0)
 
-COMPANY_COUNT = 1000
-CANDIDATE_COUNT = 1000
+COMPANY_COUNT = 20
+CANDIDATE_COUNT = 20
 
 # Strategies to choose from (distributed uniformly, in order)
 COMPANY_STRATEGY_ASSIGNMENT = list(const.Strategy)

@@ -73,10 +73,67 @@ def read_data():
 
 
 def output_results():
+    companies_total = 0
+    companies_strategy_count = {}
+    companies_results = {}
+    companies_done = {}
+    candidates_total = 0
+    candidates_results = {}
+    candidates_strategy_count = {}
+    candidates_done = {}
+
     for company in companies:
-        print(company.happiness())
+        happiness = company.happiness()
+        companies_total += happiness
+        strat = company.strategy
+        done = int(company.done())
+        if not strat in companies_results:
+            companies_results[strat] = happiness
+            companies_strategy_count[strat] = 1
+            companies_done[strat] = done
+        else:
+            companies_results[strat] += happiness
+            companies_strategy_count[strat] += 1
+            companies_done[strat] += done
     for candidate in candidates:
-        print(candidate.happiness())
+        happiness = candidate.happiness()
+        candidates_total += happiness
+        strat = candidate.strategy
+        done = int(candidate.done())
+        if not strat in candidates_results:
+            candidates_results[strat] = happiness
+            candidates_strategy_count[strat] = 1
+            candidates_done[strat] = done
+        else:
+            candidates_results[strat] += happiness
+            candidates_strategy_count[strat] += 1
+            candidates_done[strat] += done
+
+    companies_avg = companies_total/len(companies)
+    candidates_avg = candidates_total/len(candidates)
+
+    print("===============================")
+    print("== COMPANIES ==")
+    print("Average happiness: ${:.2f}".format(companies_avg))
+    for key, value in companies_results.items():
+        count = companies_strategy_count[key]
+        print("{} avg: ${:.2f}".format(key, value/count))#, companies_done[key], count))
+
+    print("===============================")
+    print("== CANDIDATES ==")
+    print("Average happiness: ${:.2f}".format(candidates_avg))
+    for key, value in candidates_results.items():
+        count = candidates_strategy_count[key]
+        print("{} avg: ${:.2f}".format(key, value/count))#, candidates_done[key], count))
+
+    print("===============================")
+    print("== TOTAL ==")
+    print("Average happiness: ${:.2f}".format((companies_total + candidates_total)/len(companies+candidates)))
+    for key in companies_results.keys():
+        sum = companies_results[key] + candidates_results[key]
+        count = companies_strategy_count[key] + candidates_strategy_count[key]
+        print("{} avg: ${:.2f}".format(key, sum/count))
+
 
 
 def start():
@@ -84,18 +141,25 @@ def start():
     generate_candidates()
     generate_companies()
 
-    total_agents = len(companies) + len(candidates)
-    done_agents = 0
+    done_companies = 0
+    done_candidates = 0
     curr_time = 0
-    max_time = 1000
+    max_time = 100
     print("Running negotiations with {} companies and {} candidates (max steps: {}):"
           .format(config.COMPANY_COUNT, config.CANDIDATE_COUNT, max_time))
-    while done_agents < total_agents and curr_time < max_time:
+    while (done_companies < len(companies) or done_candidates < len(candidates)) and curr_time < max_time:
         curr_offers = []
-        done_agents = 0
-        for agent in companies + candidates:
+        done_companies = 0
+        done_candidates = 0
+        for agent in companies:
             if agent.done():
-                done_agents += 1
+                done_companies += 1
+                continue
+            offers = agent.act(companies, candidates, compensation_data, curr_time)
+            curr_offers.extend(offers)
+        for agent in candidates:
+            if agent.done():
+                done_candidates += 1
                 continue
             offers = agent.act(companies, candidates, compensation_data, curr_time)
             curr_offers.extend(offers)
@@ -113,5 +177,9 @@ def start():
         if curr_time % 10 == 0:
             print("At step: {}".format(curr_time))
     print("Finished after {} steps".format(curr_time))
+
+    for company in companies:
+        print(company.candidates_hired)
+        print([o.candidate for o in company.accepted_offers])
 
     output_results()
