@@ -80,7 +80,7 @@ class Company(Agent):
         happiness = 0.0
         for offer in self.accepted_offers:
             valuation = self.candidate_valuations[offer.candidate][1]
-            happiness += (valuation.total() * 1.5) - offer.total()
+            happiness += (valuation.total() * config.COMPANY_ACCEPTED_OFFER_MULTIPLIER) - offer.total()
         lacking = self.candidates_to_hire - len(self.accepted_offers)
         if lacking > 0:
             happiness -= lacking*config.COMPANY_LOST_HAPPINESS_MISSING_EMPLOYEES
@@ -201,7 +201,7 @@ class Candidate(Agent):
     # Called after found a job
     def happiness(self):
         if len(self.accepted_offers) > 0:
-            accepted_offer_value = self.accepted_offers[0].total()*1.5
+            accepted_offer_value = self.accepted_offers[0].total()*config.CANDIDATE_ACCEPTED_OFFER_MULTIPLIER
         else:
             accepted_offer_value = 0
         return accepted_offer_value - self.valuation.total()

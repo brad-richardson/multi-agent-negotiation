@@ -56,7 +56,7 @@ def generate_companies(count):
         company = Company()
         company.id = i
         company.strategy = next_strategy(is_company=True)
-        company.candidates_to_hire = config.COMPANY_CANDIDATES_TO_HIRE
+        company.candidates_to_hire = config.company_candidates_to_hire(count, len(candidates))
         company.decide_valuations(compensation_data, candidates)
         companies.append(company)
 
@@ -105,10 +105,12 @@ def output_results():
             companies_results[strat] = happiness
             companies_strategy_count[strat] = 1
             companies_done[strat] = done
+            global_company_strat_results[strat] = [happiness]
         else:
             companies_results[strat] += happiness
             companies_strategy_count[strat] += 1
             companies_done[strat] += done
+            global_company_strat_results[strat].append(happiness)
     for candidate in candidates:
         happiness = candidate.happiness()
         candidates_total += happiness
@@ -120,10 +122,12 @@ def output_results():
             candidates_results[strat] = happiness
             candidates_strategy_count[strat] = 1
             candidates_done[strat] = done
+            global_candidate_strat_results[strat] = [happiness]
         else:
             candidates_results[strat] += happiness
             candidates_strategy_count[strat] += 1
             candidates_done[strat] += done
+            global_candidate_strat_results[strat].append(happiness)
         # if strat == Strategy.negotiate_until_satisfied:
             # print(happiness)
 
@@ -136,10 +140,6 @@ def output_results():
     output("== COMPANIES ==")
     output("Average happiness: ${:.2f}".format(companies_avg))
     for key, value in companies_results.items():
-        if key not in global_company_strat_results:
-            global_company_strat_results[key] = [value]
-        else:
-            global_company_strat_results[key].append(value)
         count = companies_strategy_count[key]
         output("{} avg: ${:.2f}".format(key, value/count))  # (done: {}/{}) companies_done[key], count
 
@@ -147,10 +147,6 @@ def output_results():
     output("== CANDIDATES ==")
     output("Average happiness: ${:.2f}".format(candidates_avg))
     for key, value in candidates_results.items():
-        if key not in global_candidate_strat_results:
-            global_candidate_strat_results[key] = [value]
-        else:
-            global_candidate_strat_results[key].append(value)
         count = candidates_strategy_count[key]
         output("{} avg: ${:.2f}".format(key, value/count))  # candidates_done[key], count
 
@@ -244,9 +240,9 @@ def start():
     print("Reading data...")
     read_data()
 
-    step_options = [5, 10, 50, 100]
-    company_options = [1, 5, 10, 50, 100, 500, 1000, 5000]
-    candidate_options = [1, 5, 10, 50, 100, 500, 1000, 5000]
+    step_options = config.STEP_COUNTS  # [5, 10, 50, 100]
+    company_options = config.COMPANY_COUNTS  # [1, 5, 10, 50, 100, 500, 1000]
+    candidate_options = config.CANDIDATE_COUNTS  # [1, 5, 10, 50, 100, 500, 1000]
 
     for max_time in step_options:
         for company_count in company_options:

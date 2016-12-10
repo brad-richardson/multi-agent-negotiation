@@ -6,9 +6,10 @@ random.seed(0)
 
 MAX_STEPS = 100
 
-COMPANY_COUNT = 1000
-CANDIDATE_COUNT = 1000
-COMPANY_CANDIDATES_TO_HIRE = math.ceil(CANDIDATE_COUNT/COMPANY_COUNT + 1)
+STEP_COUNTS = [100]
+COMPANY_COUNTS = [100]
+CANDIDATE_COUNTS = [100]
+# COMPANY_CANDIDATES_TO_HIRE = math.ceil(CANDIDATE_COUNT/COMPANY_COUNT + 1)
 
 # Strategies to choose from (distributed uniformly, in order)
 COMPANY_STRATEGY_ASSIGNMENT = list(const.Strategy)
@@ -28,6 +29,13 @@ ACCEPTANCE_RADIUS_PCT = 0.05
 
 # How much value is lost when a company doesn't hire all the employees they want
 COMPANY_LOST_HAPPINESS_MISSING_EMPLOYEES = 0
+
+COMPANY_ACCEPTED_OFFER_MULTIPLIER = 1.0
+CANDIDATE_ACCEPTED_OFFER_MULTIPLIER = 1.0
+
+
+def company_candidates_to_hire(companies, candidates):
+    return math.ceil(candidates/companies + 1)
 
 
 # How far up or down to increase/decrease on negotiation
