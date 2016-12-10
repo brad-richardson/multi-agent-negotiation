@@ -174,6 +174,7 @@ def output(output_str):
 def run_iteration(max_time, company_count, candidate_count):
     global curr_file
 
+    t = time.time()
     print("Generating agents...")
     generate_candidates(company_count)
     generate_companies(candidate_count)
@@ -217,6 +218,9 @@ def run_iteration(max_time, company_count, candidate_count):
                 print("At step: {}".format(curr_time))
         output("Finished after {} steps".format(curr_time))
         output_results()
+        output_str = "Ran for: {:.2f} seconds".format(time.time() - t)
+        print(output_str)
+        output(output_str)
 
 
 def output_final_results():
@@ -240,16 +244,14 @@ def start():
     print("Reading data...")
     read_data()
 
-    step_options = [10, 100, 500]
-    company_options = [1, 5, 10, 100, 500, 1000]
-    candidate_options = [1, 5, 10, 100, 500, 1000]
+    step_options = [5, 10, 50, 100]
+    company_options = [1, 5, 10, 50, 100, 500, 1000, 5000]
+    candidate_options = [1, 5, 10, 50, 100, 500, 1000, 5000]
 
     for max_time in step_options:
         for company_count in company_options:
             for candidate_count in candidate_options:
-                t = time.time()
                 run_iteration(max_time, company_count, candidate_count)
-                print("Ran for: {:.2f} seconds".format(time.time() - t))
 
     output_final_results()
     global_file.close()
