@@ -4,8 +4,6 @@ import const
 
 random.seed(0)
 
-MAX_STEPS = 100
-
 STEP_COUNTS = [100]
 COMPANY_COUNTS = [100]
 CANDIDATE_COUNTS = [100]
