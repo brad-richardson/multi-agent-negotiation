@@ -1,5 +1,4 @@
 import random
-import copy
 import const
 
 random.seed(0)

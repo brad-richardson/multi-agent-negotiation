@@ -1,7 +1,7 @@
 import random
-import math
+import time
 import config
-from const import JOB_TYPES, Action, Strategy
+from const import JOB_TYPES
 from agents import Candidate, Company
 from classes import Negotiable
 
@@ -11,6 +11,11 @@ compensation_data = {}
 companies = []
 candidates = []
 offer_history = []
+global_file = open('out/all.txt', 'w')
+curr_file = None
+
+global_company_strat_results = {}
+global_candidate_strat_results = {}
 
 strat_index = 0
 
@@ -29,10 +34,11 @@ def next_strategy(is_company):
     return strategy
 
 
-def generate_candidates():
-    global strat_index
+def generate_candidates(count):
+    global strat_index, candidates
     strat_index = 0
-    for i in range(config.CANDIDATE_COUNT):
+    candidates = []
+    for i in range(count):
         candidate = Candidate()
         candidate.id = i
         candidate.strategy = next_strategy(is_company=False)
@@ -42,10 +48,11 @@ def generate_candidates():
 
 
 # Must be called after generate_candidates
-def generate_companies():
-    global strat_index
+def generate_companies(count):
+    global strat_index, companies
     strat_index = 0
-    for i in range(config.COMPANY_COUNT):
+    companies = []
+    for i in range(count):
         company = Company()
         company.id = i
         company.strategy = next_strategy(is_company=True)
@@ -120,76 +127,129 @@ def output_results():
         # if strat == Strategy.negotiate_until_satisfied:
             # print(happiness)
 
-    print(candidates_committed)
-    print(companies_committed)
+    # print(candidates_committed)
+    # print(companies_committed)
     companies_avg = companies_total/len(companies)
     candidates_avg = candidates_total/len(candidates)
 
-    print("===============================")
-    print("== COMPANIES ==")
-    print("Average happiness: ${:.2f}".format(companies_avg))
+    output("===============================")
+    output("== COMPANIES ==")
+    output("Average happiness: ${:.2f}".format(companies_avg))
     for key, value in companies_results.items():
+        if key not in global_company_strat_results:
+            global_company_strat_results[key] = [value]
+        else:
+            global_company_strat_results[key].append(value)
         count = companies_strategy_count[key]
-        print("{} avg: ${:.2f}".format(key, value/count)) # (done: {}/{}) companies_done[key], count
+        output("{} avg: ${:.2f}".format(key, value/count))  # (done: {}/{}) companies_done[key], count
 
-    print("===============================")
-    print("== CANDIDATES ==")
-    print("Average happiness: ${:.2f}".format(candidates_avg))
+    output("===============================")
+    output("== CANDIDATES ==")
+    output("Average happiness: ${:.2f}".format(candidates_avg))
     for key, value in candidates_results.items():
+        if key not in global_candidate_strat_results:
+            global_candidate_strat_results[key] = [value]
+        else:
+            global_candidate_strat_results[key].append(value)
         count = candidates_strategy_count[key]
-        print("{} avg: ${:.2f}".format(key, value/count)) # candidates_done[key], count
+        output("{} avg: ${:.2f}".format(key, value/count))  # candidates_done[key], count
 
-    print("===============================")
-    print("== TOTAL ==")
-    print("Average happiness: ${:.2f}".format((companies_total + candidates_total)/len(companies+candidates)))
+    output("===============================")
+    output("== TOTAL ==")
+    output("Average happiness: ${:.2f}".format((companies_total + candidates_total)/len(companies+candidates)))
     for key in companies_results.keys():
-        sum = companies_results[key] + candidates_results[key]
-        count = companies_strategy_count[key] + candidates_strategy_count[key]
-        print("{} avg: ${:.2f}".format(key, sum/count))
+        total = companies_results[key]
+        count = companies_strategy_count[key]
+        if key in candidates_results.keys():
+            total += candidates_results[key]
+            count += candidates_strategy_count[key]
+        output("{} avg: ${:.2f}".format(key, total/count))
+
+
+def output(output_str):
+    curr_file.write(output_str + "\n")
+    global_file.write(output_str + "\n")
+
+
+def run_iteration(max_time, company_count, candidate_count):
+    global curr_file
+
+    print("Generating agents...")
+    generate_candidates(company_count)
+    generate_companies(candidate_count)
+
+    with open("out/{}-{}-{}.txt".format(max_time, company_count, candidate_count), 'w') as curr_file:
+        done_companies = 0
+        done_candidates = 0
+        curr_time = 0
+        output_str = "Running negotiations with {} companies and {} candidates (max steps: {}):" \
+            .format(company_count, candidate_count, max_time)
+        print(output_str)
+        output(output_str)
+        while (done_companies < len(companies) or done_candidates < len(candidates)) and curr_time < max_time:
+            curr_offers = []
+            done_companies = 0
+            done_candidates = 0
+            for agent in companies:
+                if agent.done():
+                    done_companies += 1
+                offers = agent.act(companies, candidates, compensation_data, curr_time)
+                curr_offers.extend(offers)
+            for agent in candidates:
+                if agent.done():
+                    done_candidates += 1
+                    continue
+                offers = agent.act(companies, candidates, compensation_data, curr_time)
+                curr_offers.extend(offers)
+            for offer in curr_offers:
+                if offer.sender_is_company:
+                    candidates[offer.candidate].give(offer)
+                else:
+                    companies[offer.company].give(offer)
+                offer_history.append(offer)
+
+            curr_time += 1
+
+            intervals = 1
+            if max_time > 10:
+                intervals = round(max_time / 10)
+            if curr_time % intervals == 0:
+                print("At step: {}".format(curr_time))
+        output("Finished after {} steps".format(curr_time))
+        output_results()
+
+
+def output_final_results():
+    for key in global_candidate_strat_results.keys():
+        print(key)
+        global_file.write(str(key) + "\n")
+        comp = global_company_strat_results[key]
+        cand = global_candidate_strat_results[key]
+        global_file.write(", ".join(str(c) for c in sorted(comp)) + "\n")
+        global_file.write(", ".join(str(c) for c in sorted(cand)) + "\n")
+
+        overall = comp + cand
+        output_str = "Average for companies: ${:.2f}\nAverage for candidates: ${:.2f}\nAverage overall: ${:.2f}"\
+            .format(sum(comp)/len(comp), sum(cand)/len(cand), sum(overall)/len(overall))
+        print(output_str)
+        global_file.write(output_str + "\n")
 
 
 def start():
+    global curr_file
     print("Reading data...")
     read_data()
-    print("Generating agents...")
-    generate_candidates()
-    generate_companies()
 
-    done_companies = 0
-    done_candidates = 0
-    curr_time = 0
-    max_time = config.MAX_STEPS
-    print("Running negotiations with {} companies and {} candidates (max steps: {}):"
-          .format(config.COMPANY_COUNT, config.CANDIDATE_COUNT, max_time))
-    while (done_companies < len(companies) or done_candidates < len(candidates)) and curr_time < max_time:
-        curr_offers = []
-        done_companies = 0
-        done_candidates = 0
-        for agent in companies:
-            if agent.done():
-                done_companies += 1
-            offers = agent.act(companies, candidates, compensation_data, curr_time)
-            curr_offers.extend(offers)
-        for agent in candidates:
-            if agent.done():
-                done_candidates += 1
-                continue
-            offers = agent.act(companies, candidates, compensation_data, curr_time)
-            curr_offers.extend(offers)
-        for offer in curr_offers:
-            if offer.sender_is_company:
-                candidates[offer.candidate].give(offer)
-            else:
-                companies[offer.company].give(offer)
-            offer_history.append(offer)
+    step_options = [10, 100, 500]
+    company_options = [1, 5, 10, 100, 500, 1000]
+    candidate_options = [1, 5, 10, 100, 500, 1000]
 
-        curr_time += 1
+    for max_time in step_options:
+        for company_count in company_options:
+            for candidate_count in candidate_options:
+                t = time.time()
+                run_iteration(max_time, company_count, candidate_count)
+                print("Ran for: {:.2f} seconds".format(time.time() - t))
 
-        intervals = 1
-        if max_time > 10:
-            intervals = round(max_time/10)
-        if curr_time % intervals == 0:
-            print("At step: {}".format(curr_time))
-    print("Finished after {} steps".format(curr_time))
-
-    output_results()
+    output_final_results()
+    global_file.close()
